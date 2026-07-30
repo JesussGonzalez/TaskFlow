@@ -70,7 +70,6 @@ export default function AddTaskScreen() {
             category,
         };
 
-        console.log('Tarea capturada:', task);
         Alert.alert('Éxito', 'Tarea capturada localmente');
 
         setTitle('');
@@ -106,7 +105,16 @@ export default function AddTaskScreen() {
                                 keyboardType="default"
                                 maxLength={80}
                                 onBlur={() => setFocusedField(null)}
-                                onChangeText={setTitle}
+                                onChangeText={(value) => {
+                                    setTitle(value);
+
+                                    if (errors.title) {
+                                        setErrors((currentErrors) => ({
+                                        ...currentErrors,
+                                        title: undefined,
+                                        }));
+                                    }
+                                    }}
                                 onFocus={() => setFocusedField('title')}
                                 placeholder="Ej. Preparar presentación"
                                 placeholderTextColor={COLORS.textSecondary}
@@ -128,7 +136,16 @@ export default function AddTaskScreen() {
                                 maxLength={300}
                                 multiline
                                 onBlur={() => setFocusedField(null)}
-                                onChangeText={setDescription}
+                                onChangeText={(value) => {
+                                    setDescription(value);
+
+                                    if (errors.description) {
+                                        setErrors((currentErrors) => ({
+                                        ...currentErrors,
+                                        description: undefined,
+                                        }));
+                                    }
+                                    }}
                                 onFocus={() => setFocusedField('description')}
                                 placeholder="Agregá los detalles de la tarea"
                                 placeholderTextColor={COLORS.textSecondary}
