@@ -36,3 +36,4 @@ src/
 │   └── ProfileScreen.tsx
 └── types/
     └── index.ts
+    
