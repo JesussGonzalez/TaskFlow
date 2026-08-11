@@ -1,39 +1,47 @@
-# TaskFlow - Pre-entrega
+# TaskFlow
 
-TaskFlow es una aplicación móvil desarrollada con React Native, Expo y TypeScript.
+TaskFlow es una aplicación móvil desarrollada con React Native, Expo y TypeScript
+para capturar y organizar tareas desde un estado local.
 
-El objetivo de esta pre-entrega es implementar una estructura de carpetas profesional, crear componentes reutilizables y utilizar props tipadas con TypeScript.
+## Funcionalidades
 
-## Funcionalidades realizadas
+- Formulario controlado para título, descripción y categoría.
+- Validaciones con mensajes y estilos de foco o error.
+- Creación local de tareas con fecha y estado de finalización.
+- Lista de tareas renderizada con `FlatList`.
+- Estado vacío que invita a crear la primera tarea.
+- Marcado de tareas como pendientes o completadas.
+- Vista de detalle con título, descripción, categoría, fecha y estado.
+- Navegación simulada entre lista y detalle mediante `selectedTask`.
+- Componentes reutilizables y props tipadas con TypeScript.
 
-- Creación de una arquitectura organizada dentro de `src`.
-- Separación de componentes y pantallas.
-- Creación del componente reutilizable `ProfileCard`.
-- Uso de props para mostrar nombre, rol e imagen.
-- Tipado de props con TypeScript.
-- Uso del componente `Image` de React Native.
-- Creación de `HomeScreen` y `ProfileScreen`.
-- Centralización de colores.
-- Separación de datos de prueba.
-- Uso de `StyleSheet.create`.
-- Implementación de `SafeAreaView`.
-
-## Estructura del proyecto
+## Estructura principal
 
 ```text
 src/
 ├── assets/
-|   └──images.jpg
-|   └──perfil2.jpg
 ├── components/
-│   └── ProfileCard.tsx
-├── theme/
-│   └── index.ts
+│   ├── EmptyState.tsx
+│   ├── ProfileCard.tsx
+│   └── TaskCard.tsx
 ├── data/
 │   └── base.ts
 ├── screens/
+│   ├── AddTaskScreen.tsx
 │   ├── HomeScreen.tsx
-│   └── ProfileScreen.tsx
-└── types/
-    └── index.ts
-    
+│   ├── ProfileScreen.tsx
+│   └── TaskDetailScreen.tsx
+├── theme/
+│   └── index.ts
+├── types/
+│   └── index.ts
+└── utils/
+    └── formatTaskDate.ts
+```
+
+## Ejecutar el proyecto
+
+```bash
+npm install
+npm start
+```
