@@ -107,6 +107,3 @@ npx expo start -c
 - Usar la flecha nativa del header para volver.
 - Cambiar a la pestaña `Perfil` y regresar a `Tareas`.
 
-## Nota
-
-Las tareas continúan almacenadas en estado local con `useState`. La persistencia global y en la nube se incorporará en los próximos módulos con Redux Toolkit y Firebase.
