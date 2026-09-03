@@ -1,56 +1,112 @@
-# TaskFlow - Lista de tareas con detalle
+# TaskFlow - Clase 5
 
 TaskFlow es una aplicación móvil desarrollada con React Native, Expo y TypeScript.
 
-Este checkpoint amplía la pre-entrega anterior incorporando manejo de tareas con estado local, estado vacío, lista interactiva y vista de detalle sin usar todavía React Navigation.
+En este checkpoint se reemplaza la navegación simulada con estado local por una estructura real de React Navigation, usando pestañas inferiores y un Native Stack para el flujo de tareas.
 
-## Funcionalidades realizadas
+## Navegación implementada
 
-- Estructura organizada dentro de `src`.
-- Formulario controlado con `useState` para crear tareas.
-- Campos de nombre, descripción, fecha y categoría.
-- Lista de tareas renderizada con `FlatList`.
-- Estado `completed` para marcar tareas como completadas o pendientes.
-- Estado vacío cuando no existen tareas.
-- Estado `selectedTask` para seleccionar una tarea.
-- Renderizado condicional entre estado vacío, lista y detalle.
-- Vista `TaskDetail` con información completa de la tarea.
-- Botón `Volver` para regresar desde el detalle a la lista.
-- `onPress` sobre cada tarea para abrir su detalle.
-- Estilos centralizados y coherentes con la entrega anterior.
-- `App.tsx` conectado a `HomeScreen`.
+```text
+NavigationContainer
+└── BottomTabNavigator
+    ├── Home
+    │   └── NativeStackNavigator
+    │       ├── TaskList
+    │       ├── TaskDetail
+    │       └── TaskForm
+    └── Profile
+```
+
+### Bottom Tabs
+
+La navegación principal tiene dos pestañas:
+
+- `Home`: contiene todo el flujo relacionado con las tareas.
+- `Profile`: muestra la información del usuario.
+
+### Stack de tareas
+
+Dentro de `Home` se utiliza un `NativeStackNavigator` con tres pantallas:
+
+- `TaskList`: muestra la colección de tareas y el estado vacío.
+- `TaskDetail`: recibe `taskId` por `route.params` y muestra la tarea seleccionada.
+- `TaskForm`: permite crear una nueva tarea.
+
+Al tocar una tarea se ejecuta:
+
+```ts
+navigation.navigate('TaskDetail', { taskId: item.id });
+```
+
+Después de guardar una tarea, el formulario ejecuta:
+
+```ts
+navigation.navigate('TaskList');
+```
+
+De esta forma se vuelve programáticamente a la lista principal.
 
 ## Estructura principal
 
 ```text
 src/
-├── assets/
-│   ├── images.jpg
-│   └── perfil2.jpg
 ├── components/
 │   ├── EmptyState.tsx
 │   ├── ProfileCard.tsx
 │   ├── TaskDetail.tsx
 │   ├── TaskForm.tsx
 │   └── TaskItem.tsx
-├── data/
-│   └── base.ts
+├── navigation/
+│   ├── AppNavigator.tsx
+│   └── types.ts
 ├── screens/
 │   ├── HomeScreen.tsx
-│   └── ProfileScreen.tsx
+│   ├── ProfileScreen.tsx
+│   ├── TaskDetailScreen.tsx
+│   ├── TaskFormScreen.tsx
+│   └── TaskListScreen.tsx
 ├── theme/
 │   └── index.ts
 └── types/
     └── index.ts
 ```
 
+## Dependencias de navegación
+
+El proyecto utiliza:
+
+- `@react-navigation/native`
+- `@react-navigation/native-stack`
+- `@react-navigation/bottom-tabs`
+- `react-native-screens`
+- `react-native-safe-area-context`
+
 ## Cómo probarlo
 
-1. Ejecutar `npm install` si todavía no están instaladas las dependencias.
-2. Ejecutar `npm start`.
-3. Al iniciar, comprobar que aparece el mensaje de lista vacía.
-4. Crear una tarea desde el formulario.
-5. Verificar que la nueva tarea aparece en la lista.
-6. Presionar la tarea para abrir su detalle.
-7. Presionar `Volver` para regresar a la lista.
-8. Marcar la tarea como completada y comprobar el cambio visual.
+1. Instalar las dependencias:
+
+```bash
+npm install
+```
+
+2. Iniciar Expo:
+
+```bash
+npx expo start -c
+```
+
+3. Probar el siguiente flujo:
+
+- Abrir la pestaña `Tareas`.
+- Comprobar el estado vacío.
+- Presionar `Nueva tarea`.
+- Completar el formulario y guardar.
+- Verificar que la app vuelve automáticamente a `TaskList`.
+- Presionar una tarea.
+- Confirmar que se abre `TaskDetail`.
+- Usar la flecha nativa del header para volver.
+- Cambiar a la pestaña `Perfil` y regresar a `Tareas`.
+
+## Nota
+
+Las tareas continúan almacenadas en estado local con `useState`. La persistencia global y en la nube se incorporará en los próximos módulos con Redux Toolkit y Firebase.
