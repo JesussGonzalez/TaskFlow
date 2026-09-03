@@ -1,17 +1,19 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import type { TaskStackParamList } from '../navigation/types';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { deleteTask, toggleTaskStatus } from '../store/taskSlice';
 import { COLORS } from '../theme';
-import type { Task } from '../types';
 
-type Props = NativeStackScreenProps<TaskStackParamList, 'TaskDetail'> & {
-    tasks: Task[];
-};
+type Props = NativeStackScreenProps<TaskStackParamList, 'TaskDetail'>;
 
-export default function TaskDetailScreen({ route, tasks }: Props) {
+export default function TaskDetailScreen({ navigation, route }: Props) {
+    const dispatch = useAppDispatch();
     const { taskId } = route.params;
-    const task = tasks.find((item) => item.id === taskId);
+    const task = useAppSelector((state) =>
+        state.tasks.items.find((item: { id: string }) => item.id === taskId),
+    );
 
     if (!task) {
         return (
@@ -19,12 +21,26 @@ export default function TaskDetailScreen({ route, tasks }: Props) {
                 <View style={styles.card}>
                     <Text style={styles.title}>Tarea no encontrada</Text>
                     <Text style={styles.description}>
-                        No pudimos encontrar la tarea seleccionada.
+                        La tarea ya no está disponible.
                     </Text>
+                    <Pressable
+                        onPress={() => navigation.navigate('TaskList')}
+                        style={({ pressed }: { pressed: boolean }) => [
+                            styles.primaryButton,
+                            pressed && styles.buttonPressed,
+                        ]}
+                    >
+                        <Text style={styles.primaryButtonText}>Volver a la lista</Text>
+                    </Pressable>
                 </View>
             </View>
         );
     }
+
+    const handleDelete = () => {
+        dispatch(deleteTask(task.id));
+        navigation.navigate('TaskList');
+    };
 
     return (
         <View style={styles.container}>
@@ -61,6 +77,30 @@ export default function TaskDetailScreen({ route, tasks }: Props) {
                 <Text style={styles.label}>Categoría</Text>
                 <Text style={styles.value}>{task.category}</Text>
             </View>
+
+            <Pressable
+                onPress={() => dispatch(toggleTaskStatus(task.id))}
+                style={({ pressed }: { pressed: boolean }) => [
+                    styles.primaryButton,
+                    pressed && styles.buttonPressed,
+                ]}
+                accessibilityRole="button"
+            >
+                <Text style={styles.primaryButtonText}>
+                    {task.completed ? 'Marcar como pendiente' : 'Marcar como completada'}
+                </Text>
+            </Pressable>
+
+            <Pressable
+                onPress={handleDelete}
+                style={({ pressed }: { pressed: boolean }) => [
+                    styles.deleteButton,
+                    pressed && styles.buttonPressed,
+                ]}
+                accessibilityRole="button"
+            >
+                <Text style={styles.deleteButtonText}>Eliminar tarea</Text>
+            </Pressable>
         </View>
     );
 }
@@ -90,6 +130,7 @@ const styles = StyleSheet.create({
         color: COLORS.textSecondary,
         fontSize: 15,
         lineHeight: 22,
+        marginBottom: 18,
     },
     statusBadge: {
         alignSelf: 'flex-start',
@@ -116,6 +157,7 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         borderWidth: 1,
         padding: 20,
+        marginBottom: 18,
     },
     label: {
         color: COLORS.textSecondary,
@@ -132,5 +174,35 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.border,
         height: 1,
         marginVertical: 18,
+    },
+    primaryButton: {
+        alignItems: 'center',
+        backgroundColor: COLORS.primary,
+        borderRadius: 12,
+        marginBottom: 10,
+        paddingHorizontal: 16,
+        paddingVertical: 13,
+    },
+    primaryButtonText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    deleteButton: {
+        alignItems: 'center',
+        backgroundColor: '#FEF2F2',
+        borderColor: '#FECACA',
+        borderRadius: 12,
+        borderWidth: 1,
+        paddingHorizontal: 16,
+        paddingVertical: 13,
+    },
+    deleteButtonText: {
+        color: '#B91C1C',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    buttonPressed: {
+        opacity: 0.78,
     },
 });

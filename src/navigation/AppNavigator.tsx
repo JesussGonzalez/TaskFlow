@@ -1,48 +1,19 @@
-import { useState } from 'react';
 import { Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import ProfileScreen from '../screens/ProfileScreen';
 import TaskDetailScreen from '../screens/TaskDetailScreen';
 import TaskFormScreen from '../screens/TaskFormScreen';
 import TaskListScreen from '../screens/TaskListScreen';
 import { COLORS } from '../theme';
-import type { Task } from '../types';
 import type { RootTabParamList, TaskStackParamList } from './types';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const Stack = createNativeStackNavigator<TaskStackParamList>();
 
-type TaskListNavigationProps = NativeStackScreenProps<TaskStackParamList, 'TaskList'>;
-type TaskDetailNavigationProps = NativeStackScreenProps<TaskStackParamList, 'TaskDetail'>;
-type TaskFormNavigationProps = NativeStackScreenProps<TaskStackParamList, 'TaskForm'>;
-
 function TaskStackNavigator() {
-    const [tasks, setTasks] = useState<Task[]>([]);
-
-    const addTask = (taskData: Omit<Task, 'id' | 'completed'>) => {
-        const newTask: Task = {
-            id: Date.now().toString(),
-            ...taskData,
-            completed: false,
-        };
-
-        setTasks((currentTasks) => [newTask, ...currentTasks]);
-    };
-
-    const toggleTaskCompleted = (taskId: string) => {
-        setTasks((currentTasks) =>
-            currentTasks.map((task) =>
-                task.id === taskId
-                    ? { ...task, completed: !task.completed }
-                    : task,
-            ),
-        );
-    };
-
     return (
         <Stack.Navigator
             initialRouteName="TaskList"
@@ -56,23 +27,21 @@ function TaskStackNavigator() {
                 },
             }}
         >
-            <Stack.Screen name="TaskList" options={{ title: 'Mis tareas' }}>
-                {(props: TaskListNavigationProps) => (
-                    <TaskListScreen
-                        {...props}
-                        tasks={tasks}
-                        onToggleCompleted={toggleTaskCompleted}
-                    />
-                )}
-            </Stack.Screen>
-
-            <Stack.Screen name="TaskDetail" options={{ title: 'Detalle de tarea' }}>
-                {(props: TaskDetailNavigationProps) => <TaskDetailScreen {...props} tasks={tasks} />}
-            </Stack.Screen>
-
-            <Stack.Screen name="TaskForm" options={{ title: 'Nueva tarea' }}>
-                {(props: TaskFormNavigationProps) => <TaskFormScreen {...props} onAddTask={addTask} />}
-            </Stack.Screen>
+            <Stack.Screen
+                name="TaskList"
+                component={TaskListScreen}
+                options={{ title: 'Mis tareas' }}
+            />
+            <Stack.Screen
+                name="TaskDetail"
+                component={TaskDetailScreen}
+                options={{ title: 'Detalle de tarea' }}
+            />
+            <Stack.Screen
+                name="TaskForm"
+                component={TaskFormScreen}
+                options={{ title: 'Nueva tarea' }}
+            />
         </Stack.Navigator>
     );
 }
@@ -101,7 +70,6 @@ export default function AppNavigator() {
                         ),
                     }}
                 />
-
                 <Tab.Screen
                     name="Profile"
                     component={ProfileScreen}

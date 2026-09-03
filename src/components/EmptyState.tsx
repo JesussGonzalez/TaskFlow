@@ -1,14 +1,22 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { COLORS } from '../theme';
 
-export default function EmptyState() {
+type EmptyStateProps = {
+    title?: string;
+    text?: string;
+};
+
+export default function EmptyState({
+    title = '¡No tienes tareas pendientes!',
+    text = 'Empieza por crear una nueva tarea.',
+}: EmptyStateProps) {
     return (
         <View style={styles.container}>
             <Text style={styles.icon} accessibilityElementsHidden>
                 ✓
             </Text>
-            <Text style={styles.title}>¡No tienes tareas pendientes!</Text>
-            <Text style={styles.text}>Empieza por crear una arriba.</Text>
+            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.text}>{text}</Text>
         </View>
     );
 }

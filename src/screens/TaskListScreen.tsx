@@ -4,22 +4,43 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import EmptyState from '../components/EmptyState';
 import TaskItem from '../components/TaskItem';
 import type { TaskStackParamList } from '../navigation/types';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { setFilter, toggleTaskStatus, type TaskFilter } from '../store/taskSlice';
 import { COLORS } from '../theme';
 import type { Task } from '../types';
 
-type Props = NativeStackScreenProps<TaskStackParamList, 'TaskList'> & {
-    tasks: Task[];
-    onToggleCompleted: (taskId: string) => void;
-};
+type Props = NativeStackScreenProps<TaskStackParamList, 'TaskList'>;
 
-export default function TaskListScreen({
-    navigation,
-    tasks,
-    onToggleCompleted,
-}: Props) {
+const filters: { value: TaskFilter; label: string }[] = [
+    { value: 'all', label: 'Todas' },
+    { value: 'pending', label: 'Pendientes' },
+    { value: 'completed', label: 'Completadas' },
+];
+
+export default function TaskListScreen({ navigation }: Props) {
+    const dispatch = useAppDispatch();
+    const { items, filter } = useAppSelector((state) => state.tasks);
+
+    const filteredTasks = items.filter((task: Task) => {
+        if (filter === 'completed') return task.completed;
+        if (filter === 'pending') return !task.completed;
+        return true;
+    });
+
+    const emptyMessage =
+        filter === 'all'
+            ? {
+                  title: 'No hay tareas cargadas',
+                  text: 'Creá una nueva tarea para empezar.',
+              }
+            : {
+                  title: 'No hay tareas para este filtro',
+                  text: 'Probá seleccionando otro estado.',
+              };
+
     return (
         <FlatList
-            data={tasks}
+            data={filteredTasks}
             keyExtractor={(item: Task) => item.id}
             renderItem={({ item }: { item: Task }) => (
                 <TaskItem
@@ -29,7 +50,7 @@ export default function TaskListScreen({
                             taskId: item.id,
                         })
                     }
-                    onToggleCompleted={() => onToggleCompleted(item.id)}
+                    onToggleCompleted={() => dispatch(toggleTaskStatus(item.id))}
                 />
             )}
             ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -38,7 +59,7 @@ export default function TaskListScreen({
                     <View style={styles.header}>
                         <Text style={styles.title}>TaskFlow</Text>
                         <Text style={styles.subtitle}>
-                            Organizá tus tareas y accedé a cada detalle.
+                            Tus tareas ahora se administran desde Redux.
                         </Text>
                     </View>
 
@@ -56,11 +77,44 @@ export default function TaskListScreen({
 
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Tus tareas</Text>
-                        <Text style={styles.counter}>{tasks.length}</Text>
+                        <Text style={styles.counter}>
+                            {filteredTasks.length}/{items.length}
+                        </Text>
+                    </View>
+
+                    <View style={styles.filters}>
+                        {filters.map((item) => {
+                            const isActive = filter === item.value;
+
+                            return (
+                                <Pressable
+                                    key={item.value}
+                                    onPress={() => dispatch(setFilter(item.value))}
+                                    style={({ pressed }: { pressed: boolean }) => [
+                                        styles.filterButton,
+                                        isActive && styles.filterButtonActive,
+                                        pressed && styles.filterButtonPressed,
+                                    ]}
+                                    accessibilityRole="button"
+                                    accessibilityState={{ selected: isActive }}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.filterText,
+                                            isActive && styles.filterTextActive,
+                                        ]}
+                                    >
+                                        {item.label}
+                                    </Text>
+                                </Pressable>
+                            );
+                        })}
                     </View>
                 </View>
             }
-            ListEmptyComponent={<EmptyState />}
+            ListEmptyComponent={
+                <EmptyState title={emptyMessage.title} text={emptyMessage.text} />
+            }
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
         />
@@ -111,7 +165,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 14,
+        marginBottom: 12,
     },
     sectionTitle: {
         color: COLORS.text,
@@ -124,11 +178,38 @@ const styles = StyleSheet.create({
         color: COLORS.primary,
         fontSize: 13,
         fontWeight: '700',
-        minWidth: 28,
         overflow: 'hidden',
         paddingHorizontal: 8,
         paddingVertical: 5,
         textAlign: 'center',
+    },
+    filters: {
+        flexDirection: 'row',
+        gap: 8,
+        marginBottom: 16,
+    },
+    filterButton: {
+        backgroundColor: COLORS.surface,
+        borderColor: COLORS.border,
+        borderRadius: 999,
+        borderWidth: 1,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+    },
+    filterButtonActive: {
+        backgroundColor: COLORS.primary,
+        borderColor: COLORS.primary,
+    },
+    filterButtonPressed: {
+        opacity: 0.75,
+    },
+    filterText: {
+        color: COLORS.textSecondary,
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    filterTextActive: {
+        color: '#FFFFFF',
     },
     separator: {
         height: 12,

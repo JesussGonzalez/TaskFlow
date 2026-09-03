@@ -1,50 +1,21 @@
-# TaskFlow - Clase 5
+# TaskFlow - Clase 6
 
 TaskFlow es una aplicación móvil desarrollada con React Native, Expo y TypeScript.
 
-En este checkpoint se reemplaza la navegación simulada con estado local por una estructura real de React Navigation, usando pestañas inferiores y un Native Stack para el flujo de tareas.
+En esta entrega se incorporó Redux Toolkit para centralizar el estado de las tareas y mantener la información disponible entre las distintas pantallas de la aplicación.
 
-## Navegación implementada
+## Funcionalidades
 
-```text
-NavigationContainer
-└── BottomTabNavigator
-    ├── Home
-    │   └── NativeStackNavigator
-    │       ├── TaskList
-    │       ├── TaskDetail
-    │       └── TaskForm
-    └── Profile
-```
-
-### Bottom Tabs
-
-La navegación principal tiene dos pestañas:
-
-- `Home`: contiene todo el flujo relacionado con las tareas.
-- `Profile`: muestra la información del usuario.
-
-### Stack de tareas
-
-Dentro de `Home` se utiliza un `NativeStackNavigator` con tres pantallas:
-
-- `TaskList`: muestra la colección de tareas y el estado vacío.
-- `TaskDetail`: recibe `taskId` por `route.params` y muestra la tarea seleccionada.
-- `TaskForm`: permite crear una nueva tarea.
-
-Al tocar una tarea se ejecuta:
-
-```ts
-navigation.navigate('TaskDetail', { taskId: item.id });
-```
-
-Después de guardar una tarea, el formulario ejecuta:
-
-```ts
-navigation.navigate('TaskList');
-```
-
-De esta forma se vuelve programáticamente a la lista principal.
+- Store global configurado con Redux Toolkit.
+- Slice de tareas creado con `createSlice`.
+- Uso de `configureStore` para centralizar el estado.
+- Acciones para agregar, completar, eliminar y filtrar tareas.
+- Lista de tareas conectada con `useSelector`.
+- Formulario conectado con `useDispatch`.
+- Detalle de tarea sincronizado con el Store.
+- Filtros globales: Todas, Pendientes y Completadas.
+- El filtro seleccionado se mantiene al navegar entre pantallas.
+- Navegación con Bottom Tabs y Native Stack conservada de la entrega anterior.
 
 ## Estructura principal
 
@@ -53,57 +24,44 @@ src/
 ├── components/
 │   ├── EmptyState.tsx
 │   ├── ProfileCard.tsx
-│   ├── TaskDetail.tsx
 │   ├── TaskForm.tsx
 │   └── TaskItem.tsx
 ├── navigation/
 │   ├── AppNavigator.tsx
 │   └── types.ts
 ├── screens/
-│   ├── HomeScreen.tsx
 │   ├── ProfileScreen.tsx
 │   ├── TaskDetailScreen.tsx
 │   ├── TaskFormScreen.tsx
 │   └── TaskListScreen.tsx
+├── store/
+│   ├── hooks.ts
+│   ├── store.ts
+│   └── taskSlice.ts
 ├── theme/
 │   └── index.ts
 └── types/
     └── index.ts
 ```
 
-## Dependencias de navegación
+## Dependencias agregadas
 
-El proyecto utiliza:
+- `@reduxjs/toolkit`
+- `react-redux`
 
-- `@react-navigation/native`
-- `@react-navigation/native-stack`
-- `@react-navigation/bottom-tabs`
-- `react-native-screens`
-- `react-native-safe-area-context`
-
-## Cómo probarlo
-
-1. Instalar las dependencias:
+## Ejecutar el proyecto
 
 ```bash
 npm install
+npx expo start
 ```
 
-2. Iniciar Expo:
+## Prueba rápida
 
-```bash
-npx expo start -c
-```
-
-3. Probar el siguiente flujo:
-
-- Abrir la pestaña `Tareas`.
-- Comprobar el estado vacío.
-- Presionar `Nueva tarea`.
-- Completar el formulario y guardar.
-- Verificar que la app vuelve automáticamente a `TaskList`.
-- Presionar una tarea.
-- Confirmar que se abre `TaskDetail`.
-- Usar la flecha nativa del header para volver.
-- Cambiar a la pestaña `Perfil` y regresar a `Tareas`.
-
+1. Abrir la pestaña Tareas.
+2. Cambiar entre los filtros Todas, Pendientes y Completadas.
+3. Crear una nueva tarea.
+4. Abrir el detalle de una tarea y cambiar su estado.
+5. Volver a la lista y comprobar que el cambio se mantiene.
+6. Eliminar una tarea desde su detalle.
+7. Ir a Perfil y regresar a Tareas para comprobar que el filtro seleccionado continúa activo.

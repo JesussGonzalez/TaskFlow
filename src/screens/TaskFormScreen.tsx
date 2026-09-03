@@ -3,16 +3,17 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import TaskForm from '../components/TaskForm';
 import type { TaskStackParamList } from '../navigation/types';
+import { useAppDispatch } from '../store/hooks';
+import { addTask, type NewTask } from '../store/taskSlice';
 import { COLORS } from '../theme';
-import type { Task } from '../types';
 
-type Props = NativeStackScreenProps<TaskStackParamList, 'TaskForm'> & {
-    onAddTask: (task: Omit<Task, 'id' | 'completed'>) => void;
-};
+type Props = NativeStackScreenProps<TaskStackParamList, 'TaskForm'>;
 
-export default function TaskFormScreen({ navigation, onAddTask }: Props) {
-    const handleSave = (task: Omit<Task, 'id' | 'completed'>) => {
-        onAddTask(task);
+export default function TaskFormScreen({ navigation }: Props) {
+    const dispatch = useAppDispatch();
+
+    const handleSave = (task: NewTask) => {
+        dispatch(addTask(task));
         navigation.navigate('TaskList');
     };
 
