@@ -1,53 +1,46 @@
-# TaskFlow - Clase 6
+# TaskFlow - Clase 7
 
 TaskFlow es una aplicación móvil desarrollada con React Native, Expo y TypeScript.
 
-En esta entrega se incorporó Redux Toolkit para centralizar el estado de las tareas y mantener la información disponible entre las distintas pantallas de la aplicación.
+En esta entrega se incorporó Firebase Authentication y Cloud Firestore para trabajar con usuarios reales y guardar las tareas en la nube.
 
 ## Funcionalidades
 
-- Store global configurado con Redux Toolkit.
-- Slice de tareas creado con `createSlice`.
-- Uso de `configureStore` para centralizar el estado.
-- Acciones para agregar, completar, eliminar y filtrar tareas.
-- Lista de tareas conectada con `useSelector`.
-- Formulario conectado con `useDispatch`.
-- Detalle de tarea sincronizado con el Store.
-- Filtros globales: Todas, Pendientes y Completadas.
-- El filtro seleccionado se mantiene al navegar entre pantallas.
-- Navegación con Bottom Tabs y Native Stack conservada de la entrega anterior.
+- Registro de usuarios con correo y contraseña.
+- Inicio y cierre de sesión con Firebase Authentication.
+- Persistencia de sesión mediante AsyncStorage.
+- Navegación protegida según el estado de autenticación.
+- Tareas almacenadas en la colección `tasks` de Firestore.
+- Cada tarea guarda el `userId` del usuario autenticado.
+- Lectura en tiempo real de las tareas del usuario.
+- Creación, cambio de estado y eliminación sincronizados con Firestore.
+- Redux continúa manejando el estado utilizado por la interfaz.
+- Mensajes de error para autenticación y problemas de conexión.
+- Reglas de Firestore para separar los datos entre usuarios.
 
-## Estructura principal
+## Configuración de Firebase
 
-```text
-src/
-├── components/
-│   ├── EmptyState.tsx
-│   ├── ProfileCard.tsx
-│   ├── TaskForm.tsx
-│   └── TaskItem.tsx
-├── navigation/
-│   ├── AppNavigator.tsx
-│   └── types.ts
-├── screens/
-│   ├── ProfileScreen.tsx
-│   ├── TaskDetailScreen.tsx
-│   ├── TaskFormScreen.tsx
-│   └── TaskListScreen.tsx
-├── store/
-│   ├── hooks.ts
-│   ├── store.ts
-│   └── taskSlice.ts
-├── theme/
-│   └── index.ts
-└── types/
-    └── index.ts
+El proyecto utiliza variables de entorno. Se debe crear un archivo `.env` tomando como referencia `.env.example`.
+
+```env
+EXPO_PUBLIC_FIREBASE_API_KEY=
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+EXPO_PUBLIC_FIREBASE_APP_ID=
 ```
+
+Los valores se obtienen al registrar una aplicación Web dentro del proyecto de Firebase.
+
+En Firebase Authentication debe estar habilitado el proveedor **Correo electrónico/Contraseña**.
+
+También se debe crear una base de datos de Cloud Firestore y publicar las reglas incluidas en `firestore.rules`.
 
 ## Dependencias agregadas
 
-- `@reduxjs/toolkit`
-- `react-redux`
+- `firebase`
+- `@react-native-async-storage/async-storage`
 
 ## Ejecutar el proyecto
 
@@ -56,12 +49,21 @@ npm install
 npx expo start
 ```
 
-## Prueba rápida
+## Comprobación de los flujos
 
-1. Abrir la pestaña Tareas.
-2. Cambiar entre los filtros Todas, Pendientes y Completadas.
-3. Crear una nueva tarea.
-4. Abrir el detalle de una tarea y cambiar su estado.
-5. Volver a la lista y comprobar que el cambio se mantiene.
-6. Eliminar una tarea desde su detalle.
-7. Ir a Perfil y regresar a Tareas para comprobar que el filtro seleccionado continúa activo.
+### Registro e inicio de sesión
+
+1. Crear una cuenta nueva desde la pantalla de registro.
+2. Verificar que Firebase Authentication muestre el usuario creado.
+3. Cerrar la aplicación y volver a abrirla para comprobar que la sesión continúa activa.
+4. Cerrar sesión desde Perfil.
+5. Intentar ingresar con una contraseña incorrecta y comprobar que se muestre el mensaje de error.
+
+### Guardado de tareas
+
+1. Iniciar sesión y crear una tarea.
+2. Verificar que aparezca un documento nuevo en la colección `tasks` de Firestore.
+3. Confirmar que el documento tenga el campo `userId`.
+4. Marcar la tarea como completada y comprobar el cambio en Firestore.
+5. Eliminar la tarea y verificar que también se elimine de Firestore.
+6. Crear una segunda cuenta y comprobar que no pueda ver las tareas de la primera.

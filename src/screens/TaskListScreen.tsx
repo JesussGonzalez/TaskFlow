@@ -1,11 +1,30 @@
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import {
+    ActivityIndicator,
+    FlatList,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import EmptyState from '../components/EmptyState';
 import TaskItem from '../components/TaskItem';
 import type { TaskStackParamList } from '../navigation/types';
+import {
+    getFirestoreErrorMessage,
+    subscribeToUserTasks,
+} from '../services/taskService';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { setFilter, toggleTaskStatus, type TaskFilter } from '../store/taskSlice';
+import {
+    setFilter,
+    setTasks,
+    setTasksError,
+    setTasksLoading,
+    toggleTaskStatus,
+    type TaskFilter,
+} from '../store/taskSlice';
 import { COLORS } from '../theme';
 import type { Task } from '../types';
 
@@ -19,7 +38,36 @@ const filters: { value: TaskFilter; label: string }[] = [
 
 export default function TaskListScreen({ navigation }: Props) {
     const dispatch = useAppDispatch();
-    const { items, filter } = useAppSelector((state) => state.tasks);
+    const user = useAppSelector((state) => state.auth.user);
+    const { items, filter, isLoading, error } = useAppSelector(
+        (state) => state.tasks,
+    );
+
+    useEffect(() => {
+        if (!user?.uid) {
+            return;
+        }
+
+        dispatch(setTasksLoading(true));
+
+        const unsubscribe = subscribeToUserTasks(
+            user.uid,
+            (tasks) => {
+                dispatch(setTasks(tasks));
+                dispatch(setTasksLoading(false));
+            },
+            (subscriptionError) => {
+                dispatch(
+                    setTasksError(
+                        getFirestoreErrorMessage(subscriptionError),
+                    ),
+                );
+                dispatch(setTasksLoading(false));
+            },
+        );
+
+        return unsubscribe;
+    }, [dispatch, user?.uid]);
 
     const filteredTasks = items.filter((task: Task) => {
         if (filter === 'completed') return task.completed;
@@ -50,7 +98,14 @@ export default function TaskListScreen({ navigation }: Props) {
                             taskId: item.id,
                         })
                     }
-                    onToggleCompleted={() => dispatch(toggleTaskStatus(item.id))}
+                    onToggleCompleted={() =>
+                        dispatch(
+                            toggleTaskStatus({
+                                taskId: item.id,
+                                completed: !item.completed,
+                            }),
+                        )
+                    }
                 />
             )}
             ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -59,7 +114,7 @@ export default function TaskListScreen({ navigation }: Props) {
                     <View style={styles.header}>
                         <Text style={styles.title}>TaskFlow</Text>
                         <Text style={styles.subtitle}>
-                            Tus tareas ahora se administran desde Redux.
+                            Tus tareas se sincronizan con tu cuenta.
                         </Text>
                     </View>
 
@@ -74,6 +129,12 @@ export default function TaskListScreen({ navigation }: Props) {
                     >
                         <Text style={styles.addButtonText}>+ Nueva tarea</Text>
                     </Pressable>
+
+                    {error ? (
+                        <View style={styles.errorBox}>
+                            <Text style={styles.errorText}>{error}</Text>
+                        </View>
+                    ) : null}
 
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Tus tareas</Text>
@@ -113,7 +174,17 @@ export default function TaskListScreen({ navigation }: Props) {
                 </View>
             }
             ListEmptyComponent={
-                <EmptyState title={emptyMessage.title} text={emptyMessage.text} />
+                isLoading ? (
+                    <View style={styles.loadingBox}>
+                        <ActivityIndicator size="large" color={COLORS.primary} />
+                        <Text style={styles.loadingText}>Cargando tareas...</Text>
+                    </View>
+                ) : (
+                    <EmptyState
+                        title={emptyMessage.title}
+                        text={emptyMessage.text}
+                    />
+                )
             }
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
@@ -149,7 +220,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: COLORS.primary,
         borderRadius: 12,
-        marginBottom: 24,
+        marginBottom: 18,
         paddingHorizontal: 16,
         paddingVertical: 13,
     },
@@ -160,6 +231,19 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 15,
         fontWeight: '700',
+    },
+    errorBox: {
+        backgroundColor: '#FEF2F2',
+        borderColor: '#FECACA',
+        borderRadius: 12,
+        borderWidth: 1,
+        marginBottom: 16,
+        padding: 12,
+    },
+    errorText: {
+        color: '#B91C1C',
+        fontSize: 13,
+        lineHeight: 18,
     },
     sectionHeader: {
         alignItems: 'center',
@@ -210,6 +294,15 @@ const styles = StyleSheet.create({
     },
     filterTextActive: {
         color: '#FFFFFF',
+    },
+    loadingBox: {
+        alignItems: 'center',
+        paddingVertical: 36,
+    },
+    loadingText: {
+        color: COLORS.textSecondary,
+        fontSize: 14,
+        marginTop: 10,
     },
     separator: {
         height: 12,

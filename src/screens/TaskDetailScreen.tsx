@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -10,9 +11,10 @@ type Props = NativeStackScreenProps<TaskStackParamList, 'TaskDetail'>;
 
 export default function TaskDetailScreen({ navigation, route }: Props) {
     const dispatch = useAppDispatch();
+    const [actionError, setActionError] = useState('');
     const { taskId } = route.params;
     const task = useAppSelector((state) =>
-        state.tasks.items.find((item: { id: string }) => item.id === taskId),
+        state.tasks.items.find((item) => item.id === taskId),
     );
 
     if (!task) {
@@ -30,16 +32,45 @@ export default function TaskDetailScreen({ navigation, route }: Props) {
                             pressed && styles.buttonPressed,
                         ]}
                     >
-                        <Text style={styles.primaryButtonText}>Volver a la lista</Text>
+                        <Text style={styles.primaryButtonText}>
+                            Volver a la lista
+                        </Text>
                     </Pressable>
                 </View>
             </View>
         );
     }
 
-    const handleDelete = () => {
-        dispatch(deleteTask(task.id));
-        navigation.navigate('TaskList');
+    const handleToggle = async () => {
+        try {
+            setActionError('');
+            await dispatch(
+                toggleTaskStatus({
+                    taskId: task.id,
+                    completed: !task.completed,
+                }),
+            ).unwrap();
+        } catch (error) {
+            setActionError(
+                typeof error === 'string'
+                    ? error
+                    : 'No se pudo actualizar la tarea.',
+            );
+        }
+    };
+
+    const handleDelete = async () => {
+        try {
+            setActionError('');
+            await dispatch(deleteTask(task.id)).unwrap();
+            navigation.navigate('TaskList');
+        } catch (error) {
+            setActionError(
+                typeof error === 'string'
+                    ? error
+                    : 'No se pudo eliminar la tarea.',
+            );
+        }
     };
 
     return (
@@ -78,8 +109,12 @@ export default function TaskDetailScreen({ navigation, route }: Props) {
                 <Text style={styles.value}>{task.category}</Text>
             </View>
 
+            {actionError ? (
+                <Text style={styles.errorText}>{actionError}</Text>
+            ) : null}
+
             <Pressable
-                onPress={() => dispatch(toggleTaskStatus(task.id))}
+                onPress={handleToggle}
                 style={({ pressed }: { pressed: boolean }) => [
                     styles.primaryButton,
                     pressed && styles.buttonPressed,
@@ -87,7 +122,9 @@ export default function TaskDetailScreen({ navigation, route }: Props) {
                 accessibilityRole="button"
             >
                 <Text style={styles.primaryButtonText}>
-                    {task.completed ? 'Marcar como pendiente' : 'Marcar como completada'}
+                    {task.completed
+                        ? 'Marcar como pendiente'
+                        : 'Marcar como completada'}
                 </Text>
             </Pressable>
 
@@ -174,6 +211,11 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.border,
         height: 1,
         marginVertical: 18,
+    },
+    errorText: {
+        color: '#B91C1C',
+        fontSize: 13,
+        marginBottom: 12,
     },
     primaryButton: {
         alignItems: 'center',

@@ -13,4 +13,7 @@ export type Task = {
     date: string;
     category: string;
     completed: boolean;
+    userId: string;
 };
+
+export type NewTask = Omit<Task, 'id' | 'completed' | 'userId'>;

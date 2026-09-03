@@ -3,17 +3,29 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import TaskForm from '../components/TaskForm';
 import type { TaskStackParamList } from '../navigation/types';
-import { useAppDispatch } from '../store/hooks';
-import { addTask, type NewTask } from '../store/taskSlice';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { addTask } from '../store/taskSlice';
 import { COLORS } from '../theme';
+import type { NewTask } from '../types';
 
 type Props = NativeStackScreenProps<TaskStackParamList, 'TaskForm'>;
 
 export default function TaskFormScreen({ navigation }: Props) {
     const dispatch = useAppDispatch();
+    const user = useAppSelector((state) => state.auth.user);
 
-    const handleSave = (task: NewTask) => {
-        dispatch(addTask(task));
+    const handleSave = async (task: NewTask) => {
+        if (!user) {
+            throw 'La sesión no está disponible.';
+        }
+
+        await dispatch(
+            addTask({
+                task,
+                userId: user.uid,
+            }),
+        ).unwrap();
+
         navigation.navigate('TaskList');
     };
 
@@ -25,7 +37,7 @@ export default function TaskFormScreen({ navigation }: Props) {
             <View style={styles.header}>
                 <Text style={styles.title}>Crear tarea</Text>
                 <Text style={styles.subtitle}>
-                    Completá los datos y guardá para volver a la lista.
+                    La tarea se guardará en tu cuenta.
                 </Text>
             </View>
 

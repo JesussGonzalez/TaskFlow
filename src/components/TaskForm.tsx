@@ -1,10 +1,18 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+    ActivityIndicator,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
+} from 'react-native';
+
 import { COLORS } from '../theme';
-import type { Task } from '../types';
+import type { NewTask } from '../types';
 
 type TaskFormProps = {
-    onAddTask: (task: Omit<Task, 'id' | 'completed'>) => void;
+    onAddTask: (task: NewTask) => void | Promise<void>;
 };
 
 export default function TaskForm({ onAddTask }: TaskFormProps) {
@@ -13,8 +21,9 @@ export default function TaskForm({ onAddTask }: TaskFormProps) {
     const [date, setDate] = useState('');
     const [category, setCategory] = useState('');
     const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         const trimmedTitle = title.trim();
 
         if (!trimmedTitle) {
@@ -22,18 +31,30 @@ export default function TaskForm({ onAddTask }: TaskFormProps) {
             return;
         }
 
-        onAddTask({
-            title: trimmedTitle,
-            description: description.trim() || 'Sin descripción',
-            date: date.trim() || 'Sin fecha',
-            category: category.trim() || 'General',
-        });
+        try {
+            setError('');
+            setIsSubmitting(true);
 
-        setTitle('');
-        setDescription('');
-        setDate('');
-        setCategory('');
-        setError('');
+            await onAddTask({
+                title: trimmedTitle,
+                description: description.trim() || 'Sin descripción',
+                date: date.trim() || 'Sin fecha',
+                category: category.trim() || 'General',
+            });
+
+            setTitle('');
+            setDescription('');
+            setDate('');
+            setCategory('');
+        } catch (submitError) {
+            setError(
+                typeof submitError === 'string'
+                    ? submitError
+                    : 'No se pudo guardar la tarea.',
+            );
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -95,11 +116,19 @@ export default function TaskForm({ onAddTask }: TaskFormProps) {
 
             <Pressable
                 onPress={handleSubmit}
-                style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+                disabled={isSubmitting}
+                style={({ pressed }) => [
+                    styles.button,
+                    (pressed || isSubmitting) && styles.buttonPressed,
+                ]}
                 accessibilityRole="button"
                 accessibilityLabel="Agregar tarea"
             >
-                <Text style={styles.buttonText}>Agregar tarea</Text>
+                {isSubmitting ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                    <Text style={styles.buttonText}>Agregar tarea</Text>
+                )}
             </Pressable>
         </View>
     );
@@ -157,11 +186,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: COLORS.primary,
         borderRadius: 12,
+        minHeight: 46,
+        justifyContent: 'center',
         paddingHorizontal: 16,
         paddingVertical: 13,
     },
     buttonPressed: {
-        opacity: 0.85,
+        opacity: 0.75,
     },
     buttonText: {
         color: '#FFFFFF',

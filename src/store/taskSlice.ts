@@ -1,69 +1,115 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { Task } from '../types';
+import {
+    createAsyncThunk,
+    createSlice,
+    type PayloadAction,
+} from '@reduxjs/toolkit';
+
+import {
+    createTaskInFirestore,
+    deleteTaskFromFirestore,
+    getFirestoreErrorMessage,
+    updateTaskStatusInFirestore,
+} from '../services/taskService';
+import type { NewTask, Task } from '../types';
 
 export type TaskFilter = 'all' | 'completed' | 'pending';
-export type NewTask = Omit<Task, 'id' | 'completed'>;
 
 type TasksState = {
     items: Task[];
     filter: TaskFilter;
+    isLoading: boolean;
+    error: string | null;
 };
 
 const initialState: TasksState = {
-    items: [
-        {
-            id: '1',
-            title: 'Revisar entrega de TaskFlow',
-            description: 'Comprobar que la navegación y las tareas funcionen correctamente.',
-            date: '03/09/2026',
-            category: 'Estudio',
-            completed: false,
-        },
-        {
-            id: '2',
-            title: 'Organizar apuntes',
-            description: 'Ordenar el material visto durante la clase.',
-            date: '04/09/2026',
-            category: 'Personal',
-            completed: true,
-        },
-    ],
+    items: [],
     filter: 'all',
+    isLoading: false,
+    error: null,
 };
+
+export const addTask = createAsyncThunk<
+    void,
+    { task: NewTask; userId: string },
+    { rejectValue: string }
+>('tasks/addTask', async ({ task, userId }, { rejectWithValue }) => {
+    try {
+        await createTaskInFirestore(userId, task);
+    } catch (error) {
+        return rejectWithValue(getFirestoreErrorMessage(error));
+    }
+});
+
+export const toggleTaskStatus = createAsyncThunk<
+    void,
+    { taskId: string; completed: boolean },
+    { rejectValue: string }
+>('tasks/toggleTaskStatus', async ({ taskId, completed }, { rejectWithValue }) => {
+    try {
+        await updateTaskStatusInFirestore(taskId, completed);
+    } catch (error) {
+        return rejectWithValue(getFirestoreErrorMessage(error));
+    }
+});
+
+export const deleteTask = createAsyncThunk<
+    void,
+    string,
+    { rejectValue: string }
+>('tasks/deleteTask', async (taskId, { rejectWithValue }) => {
+    try {
+        await deleteTaskFromFirestore(taskId);
+    } catch (error) {
+        return rejectWithValue(getFirestoreErrorMessage(error));
+    }
+});
 
 const taskSlice = createSlice({
     name: 'tasks',
     initialState,
     reducers: {
-        addTask: {
-            reducer(state: TasksState, action: PayloadAction<Task>) {
-                state.items.unshift(action.payload);
-            },
-            prepare(task: NewTask) {
-                return {
-                    payload: {
-                        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-                        ...task,
-                        completed: false,
-                    },
-                };
-            },
+        setTasks(state, action: PayloadAction<Task[]>) {
+            state.items = action.payload;
+            state.error = null;
         },
-        toggleTaskStatus(state: TasksState, action: PayloadAction<string>) {
-            const task = state.items.find((item: Task) => item.id === action.payload);
-
-            if (task) {
-                task.completed = !task.completed;
-            }
-        },
-        deleteTask(state: TasksState, action: PayloadAction<string>) {
-            state.items = state.items.filter((item: Task) => item.id !== action.payload);
-        },
-        setFilter(state: TasksState, action: PayloadAction<TaskFilter>) {
+        setFilter(state, action: PayloadAction<TaskFilter>) {
             state.filter = action.payload;
         },
+        setTasksLoading(state, action: PayloadAction<boolean>) {
+            state.isLoading = action.payload;
+        },
+        setTasksError(state, action: PayloadAction<string | null>) {
+            state.error = action.payload;
+        },
+        clearTasks(state) {
+            state.items = [];
+            state.error = null;
+            state.isLoading = false;
+        },
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(addTask.pending, (state) => {
+                state.error = null;
+            })
+            .addCase(addTask.rejected, (state, action) => {
+                state.error = action.payload ?? 'No se pudo agregar la tarea.';
+            })
+            .addCase(toggleTaskStatus.rejected, (state, action) => {
+                state.error = action.payload ?? 'No se pudo actualizar la tarea.';
+            })
+            .addCase(deleteTask.rejected, (state, action) => {
+                state.error = action.payload ?? 'No se pudo eliminar la tarea.';
+            });
     },
 });
 
-export const { addTask, toggleTaskStatus, deleteTask, setFilter } = taskSlice.actions;
+export const {
+    setTasks,
+    setFilter,
+    setTasksLoading,
+    setTasksError,
+    clearTasks,
+} = taskSlice.actions;
+
 export default taskSlice.reducer;
