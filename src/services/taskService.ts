@@ -15,12 +15,14 @@ import { db } from '../firebase/firebaseConfig';
 import type { NewTask, Task } from '../types';
 
 export async function createTaskInFirestore(userId: string, task: NewTask) {
-    await addDoc(collection(db, 'tasks'), {
+    const taskReference = await addDoc(collection(db, 'tasks'), {
         ...task,
         completed: false,
         userId,
         createdAt: serverTimestamp(),
     });
+
+    return taskReference.id;
 }
 
 export async function updateTaskStatusInFirestore(

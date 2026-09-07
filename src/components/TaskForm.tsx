@@ -7,21 +7,26 @@ import {
     TextInput,
     View,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import type { TaskStackParamList } from '../navigation/types';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { createTask } from '../store/taskSlice';
 import { COLORS } from '../theme';
-import type { NewTask } from '../types';
 
-type TaskFormProps = {
-    onAddTask: (task: NewTask) => void | Promise<void>;
-};
+type Navigation = NativeStackNavigationProp<TaskStackParamList, 'TaskForm'>;
 
-export default function TaskForm({ onAddTask }: TaskFormProps) {
+export default function TaskForm() {
+    const navigation = useNavigation<Navigation>();
+    const dispatch = useAppDispatch();
+    const user = useAppSelector((state) => state.auth.user);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [date, setDate] = useState('');
     const [category, setCategory] = useState('');
     const [error, setError] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     const handleSubmit = async () => {
         const trimmedTitle = title.trim();
@@ -31,29 +36,36 @@ export default function TaskForm({ onAddTask }: TaskFormProps) {
             return;
         }
 
+        if (!user) {
+            setError('La sesión no está disponible.');
+            return;
+        }
+
         try {
             setError('');
-            setIsSubmitting(true);
+            setIsSaving(true);
 
-            await onAddTask({
-                title: trimmedTitle,
-                description: description.trim() || 'Sin descripción',
-                date: date.trim() || 'Sin fecha',
-                category: category.trim() || 'General',
-            });
+            await dispatch(
+                createTask({
+                    userId: user.uid,
+                    task: {
+                        title: trimmedTitle,
+                        description: description.trim() || 'Sin descripción',
+                        date: date.trim() || 'Sin fecha',
+                        category: category.trim() || 'General',
+                    },
+                }),
+            ).unwrap();
 
-            setTitle('');
-            setDescription('');
-            setDate('');
-            setCategory('');
-        } catch (submitError) {
+            navigation.navigate('TaskList');
+        } catch (saveError) {
             setError(
-                typeof submitError === 'string'
-                    ? submitError
+                typeof saveError === 'string'
+                    ? saveError
                     : 'No se pudo guardar la tarea.',
             );
         } finally {
-            setIsSubmitting(false);
+            setIsSaving(false);
         }
     };
 
@@ -95,7 +107,6 @@ export default function TaskForm({ onAddTask }: TaskFormProps) {
                         placeholder="Ej: 10/09/2026"
                         placeholderTextColor={COLORS.textSecondary}
                         style={styles.input}
-                        accessibilityLabel="Fecha de la tarea"
                     />
                 </View>
 
@@ -107,7 +118,6 @@ export default function TaskForm({ onAddTask }: TaskFormProps) {
                         placeholder="Ej: Estudio"
                         placeholderTextColor={COLORS.textSecondary}
                         style={styles.input}
-                        accessibilityLabel="Categoría de la tarea"
                     />
                 </View>
             </View>
@@ -116,18 +126,16 @@ export default function TaskForm({ onAddTask }: TaskFormProps) {
 
             <Pressable
                 onPress={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isSaving}
                 style={({ pressed }) => [
                     styles.button,
-                    (pressed || isSubmitting) && styles.buttonPressed,
+                    (pressed || isSaving) && styles.buttonPressed,
                 ]}
-                accessibilityRole="button"
-                accessibilityLabel="Agregar tarea"
             >
-                {isSubmitting ? (
+                {isSaving ? (
                     <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                    <Text style={styles.buttonText}>Agregar tarea</Text>
+                    <Text style={styles.buttonText}>Guardar tarea</Text>
                 )}
             </Pressable>
         </View>

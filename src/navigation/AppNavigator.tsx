@@ -13,8 +13,9 @@ import TaskDetailScreen from '../screens/TaskDetailScreen';
 import TaskFormScreen from '../screens/TaskFormScreen';
 import TaskListScreen from '../screens/TaskListScreen';
 import { getAuthErrorMessage } from '../services/authService';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { setAuthError, setAuthLoading, setUser } from '../store/authSlice';
+import { clearProfile } from '../store/profileSlice';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { clearTasks } from '../store/taskSlice';
 import { COLORS } from '../theme';
 import type {
@@ -32,9 +33,7 @@ function AuthStackNavigator() {
         <AuthStack.Navigator
             screenOptions={{
                 headerTintColor: COLORS.primary,
-                headerTitleStyle: {
-                    fontWeight: '700',
-                },
+                headerTitleStyle: { fontWeight: '700' },
             }}
         >
             <AuthStack.Screen
@@ -57,12 +56,8 @@ function TaskStackNavigator() {
             initialRouteName="TaskList"
             screenOptions={{
                 headerTintColor: COLORS.primary,
-                headerTitleStyle: {
-                    fontWeight: '700',
-                },
-                contentStyle: {
-                    backgroundColor: COLORS.background,
-                },
+                headerTitleStyle: { fontWeight: '700' },
+                contentStyle: { backgroundColor: COLORS.background },
             }}
         >
             <Stack.Screen
@@ -88,9 +83,7 @@ function PrivateNavigator() {
     return (
         <Tab.Navigator
             screenOptions={{
-                headerTitleStyle: {
-                    fontWeight: '700',
-                },
+                headerTitleStyle: { fontWeight: '700' },
                 tabBarActiveTintColor: COLORS.primary,
                 tabBarInactiveTintColor: COLORS.textSecondary,
             }}
@@ -142,6 +135,7 @@ export default function AppNavigator() {
                 } else {
                     dispatch(setUser(null));
                     dispatch(clearTasks());
+                    dispatch(clearProfile());
                 }
 
                 dispatch(setAuthLoading(false));

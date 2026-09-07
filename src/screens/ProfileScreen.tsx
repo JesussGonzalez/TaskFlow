@@ -1,25 +1,129 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 
 import ProfileCard from '../components/ProfileCard';
 import { profileData } from '../data/base';
 import { getAuthErrorMessage, signOutUser } from '../services/authService';
-import { useAppSelector } from '../store/hooks';
+import { getStoredAvatar, saveStoredAvatar } from '../services/profileService';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+    clearProfile,
+    setAvatarUri,
+    setProfileError,
+    setProfileLoading,
+} from '../store/profileSlice';
 import { COLORS } from '../theme';
 
 export default function ProfileScreen() {
+    const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.auth.user);
-    const [error, setError] = useState('');
+    const { avatarUri, isLoading, error } = useAppSelector(
+        (state) => state.profile,
+    );
+    const [signOutError, setSignOutError] = useState('');
+
+    useEffect(() => {
+        if (!user?.uid) {
+            dispatch(clearProfile());
+            return;
+        }
+
+        let isMounted = true;
+        dispatch(setProfileLoading(true));
+
+        getStoredAvatar(user.uid)
+            .then((uri) => {
+                if (isMounted) {
+                    dispatch(setAvatarUri(uri));
+                }
+            })
+            .catch(() => {
+                if (isMounted) {
+                    dispatch(
+                        setProfileError(
+                            'No se pudo recuperar la imagen de perfil.',
+                        ),
+                    );
+                }
+            })
+            .finally(() => {
+                if (isMounted) {
+                    dispatch(setProfileLoading(false));
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [dispatch, user?.uid]);
+
+    const handlePickImage = async () => {
+        if (!user?.uid) return;
+
+        dispatch(setProfileError(null));
+
+        const permission =
+            await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (!permission.granted) {
+            dispatch(
+                setProfileError(
+                    'Necesitás permitir el acceso a tus fotos para elegir una imagen.',
+                ),
+            );
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+        });
+
+        if (result.canceled) {
+            return;
+        }
+
+        const uri = result.assets[0]?.uri;
+
+        if (!uri) {
+            dispatch(setProfileError('No se pudo leer la imagen seleccionada.'));
+            return;
+        }
+
+        try {
+            dispatch(setAvatarUri(uri));
+            await saveStoredAvatar(user.uid, uri);
+        } catch {
+            dispatch(
+                setProfileError(
+                    'La imagen se mostró, pero no se pudo guardar en el dispositivo.',
+                ),
+            );
+        }
+    };
 
     const handleSignOut = async () => {
         try {
-            setError('');
+            setSignOutError('');
             await signOutUser();
-        } catch (signOutError) {
-            setError(getAuthErrorMessage(signOutError));
+            dispatch(clearProfile());
+        } catch (signOutFailure) {
+            setSignOutError(getAuthErrorMessage(signOutFailure));
         }
     };
+
+    const displayName =
+        user?.email?.split('@')[0] || profileData.name || 'Usuario TaskFlow';
 
     return (
         <SafeAreaView
@@ -34,7 +138,28 @@ export default function ProfileScreen() {
                     </Text>
                 </View>
 
-                <ProfileCard {...profileData} />
+                <ProfileCard
+                    name={displayName}
+                    role="Usuario de TaskFlow"
+                    image={avatarUri ? { uri: avatarUri } : profileData.image}
+                />
+
+                <Pressable
+                    onPress={handlePickImage}
+                    style={({ pressed }) => [
+                        styles.photoButton,
+                        pressed && styles.buttonPressed,
+                    ]}
+                    accessibilityRole="button"
+                >
+                    {isLoading ? (
+                        <ActivityIndicator color={COLORS.primary} />
+                    ) : (
+                        <Text style={styles.photoButtonText}>
+                            Elegir foto de perfil
+                        </Text>
+                    )}
+                </Pressable>
 
                 <View style={styles.informationCard}>
                     <Text style={styles.informationTitle}>Sesión activa</Text>
@@ -44,6 +169,9 @@ export default function ProfileScreen() {
                 </View>
 
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                {signOutError ? (
+                    <Text style={styles.errorText}>{signOutError}</Text>
+                ) : null}
 
                 <Pressable
                     onPress={handleSignOut}
@@ -85,6 +213,21 @@ const styles = StyleSheet.create({
         color: COLORS.textSecondary,
         fontSize: 16,
         lineHeight: 22,
+    },
+    photoButton: {
+        alignItems: 'center',
+        backgroundColor: COLORS.primarySoft,
+        borderRadius: 12,
+        marginTop: 14,
+        minHeight: 44,
+        justifyContent: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 11,
+    },
+    photoButtonText: {
+        color: COLORS.primary,
+        fontSize: 14,
+        fontWeight: '700',
     },
     informationCard: {
         backgroundColor: COLORS.surface,

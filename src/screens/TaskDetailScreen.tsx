@@ -4,7 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import type { TaskStackParamList } from '../navigation/types';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { deleteTask, toggleTaskStatus } from '../store/taskSlice';
+import { removeTask, saveTaskStatus } from '../store/taskSlice';
 import { COLORS } from '../theme';
 
 type Props = NativeStackScreenProps<TaskStackParamList, 'TaskDetail'>;
@@ -27,7 +27,7 @@ export default function TaskDetailScreen({ navigation, route }: Props) {
                     </Text>
                     <Pressable
                         onPress={() => navigation.navigate('TaskList')}
-                        style={({ pressed }: { pressed: boolean }) => [
+                        style={({ pressed }) => [
                             styles.primaryButton,
                             pressed && styles.buttonPressed,
                         ]}
@@ -45,7 +45,7 @@ export default function TaskDetailScreen({ navigation, route }: Props) {
         try {
             setActionError('');
             await dispatch(
-                toggleTaskStatus({
+                saveTaskStatus({
                     taskId: task.id,
                     completed: !task.completed,
                 }),
@@ -62,7 +62,7 @@ export default function TaskDetailScreen({ navigation, route }: Props) {
     const handleDelete = async () => {
         try {
             setActionError('');
-            await dispatch(deleteTask(task.id)).unwrap();
+            await dispatch(removeTask(task.id)).unwrap();
             navigation.navigate('TaskList');
         } catch (error) {
             setActionError(
@@ -115,11 +115,10 @@ export default function TaskDetailScreen({ navigation, route }: Props) {
 
             <Pressable
                 onPress={handleToggle}
-                style={({ pressed }: { pressed: boolean }) => [
+                style={({ pressed }) => [
                     styles.primaryButton,
                     pressed && styles.buttonPressed,
                 ]}
-                accessibilityRole="button"
             >
                 <Text style={styles.primaryButtonText}>
                     {task.completed
@@ -130,11 +129,10 @@ export default function TaskDetailScreen({ navigation, route }: Props) {
 
             <Pressable
                 onPress={handleDelete}
-                style={({ pressed }: { pressed: boolean }) => [
+                style={({ pressed }) => [
                     styles.deleteButton,
                     pressed && styles.buttonPressed,
                 ]}
-                accessibilityRole="button"
             >
                 <Text style={styles.deleteButtonText}>Eliminar tarea</Text>
             </Pressable>

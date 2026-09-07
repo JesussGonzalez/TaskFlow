@@ -28,52 +28,33 @@ const initialState: TasksState = {
     error: null,
 };
 
-export const addTask = createAsyncThunk<
-    void,
-    { task: NewTask; userId: string },
-    { rejectValue: string }
->('tasks/addTask', async ({ task, userId }, { rejectWithValue }) => {
-    try {
-        await createTaskInFirestore(userId, task);
-    } catch (error) {
-        return rejectWithValue(getFirestoreErrorMessage(error));
-    }
-});
-
-export const toggleTaskStatus = createAsyncThunk<
-    void,
-    { taskId: string; completed: boolean },
-    { rejectValue: string }
->('tasks/toggleTaskStatus', async ({ taskId, completed }, { rejectWithValue }) => {
-    try {
-        await updateTaskStatusInFirestore(taskId, completed);
-    } catch (error) {
-        return rejectWithValue(getFirestoreErrorMessage(error));
-    }
-});
-
-export const deleteTask = createAsyncThunk<
-    void,
-    string,
-    { rejectValue: string }
->('tasks/deleteTask', async (taskId, { rejectWithValue }) => {
-    try {
-        await deleteTaskFromFirestore(taskId);
-    } catch (error) {
-        return rejectWithValue(getFirestoreErrorMessage(error));
-    }
-});
-
 const taskSlice = createSlice({
     name: 'tasks',
     initialState,
     reducers: {
-        setTasks(state, action: PayloadAction<Task[]>) {
-            state.items = action.payload;
-            state.error = null;
+        addTask(state, action: PayloadAction<Task>) {
+            const exists = state.items.some((item) => item.id === action.payload.id);
+
+            if (!exists) {
+                state.items.unshift(action.payload);
+            }
+        },
+        toggleTaskStatus(state, action: PayloadAction<string>) {
+            const task = state.items.find((item) => item.id === action.payload);
+
+            if (task) {
+                task.completed = !task.completed;
+            }
+        },
+        deleteTask(state, action: PayloadAction<string>) {
+            state.items = state.items.filter((item) => item.id !== action.payload);
         },
         setFilter(state, action: PayloadAction<TaskFilter>) {
             state.filter = action.payload;
+        },
+        setTasks(state, action: PayloadAction<Task[]>) {
+            state.items = action.payload;
+            state.error = null;
         },
         setTasksLoading(state, action: PayloadAction<boolean>) {
             state.isLoading = action.payload;
@@ -83,33 +64,78 @@ const taskSlice = createSlice({
         },
         clearTasks(state) {
             state.items = [];
+            state.filter = 'all';
             state.error = null;
             state.isLoading = false;
         },
     },
-    extraReducers: (builder) => {
-        builder
-            .addCase(addTask.pending, (state) => {
-                state.error = null;
-            })
-            .addCase(addTask.rejected, (state, action) => {
-                state.error = action.payload ?? 'No se pudo agregar la tarea.';
-            })
-            .addCase(toggleTaskStatus.rejected, (state, action) => {
-                state.error = action.payload ?? 'No se pudo actualizar la tarea.';
-            })
-            .addCase(deleteTask.rejected, (state, action) => {
-                state.error = action.payload ?? 'No se pudo eliminar la tarea.';
-            });
-    },
 });
 
 export const {
-    setTasks,
+    addTask,
+    toggleTaskStatus,
+    deleteTask,
     setFilter,
+    setTasks,
     setTasksLoading,
     setTasksError,
     clearTasks,
 } = taskSlice.actions;
+
+export const createTask = createAsyncThunk<
+    void,
+    { task: NewTask; userId: string },
+    { rejectValue: string }
+>('tasks/createTask', async ({ task, userId }, { dispatch, rejectWithValue }) => {
+    try {
+        const id = await createTaskInFirestore(userId, task);
+
+        dispatch(
+            addTask({
+                id,
+                ...task,
+                completed: false,
+                userId,
+            }),
+        );
+    } catch (error) {
+        const message = getFirestoreErrorMessage(error);
+        dispatch(setTasksError(message));
+        return rejectWithValue(message);
+    }
+});
+
+export const saveTaskStatus = createAsyncThunk<
+    void,
+    { taskId: string; completed: boolean },
+    { rejectValue: string }
+>(
+    'tasks/saveTaskStatus',
+    async ({ taskId, completed }, { dispatch, rejectWithValue }) => {
+        try {
+            await updateTaskStatusInFirestore(taskId, completed);
+            dispatch(toggleTaskStatus(taskId));
+        } catch (error) {
+            const message = getFirestoreErrorMessage(error);
+            dispatch(setTasksError(message));
+            return rejectWithValue(message);
+        }
+    },
+);
+
+export const removeTask = createAsyncThunk<
+    void,
+    string,
+    { rejectValue: string }
+>('tasks/removeTask', async (taskId, { dispatch, rejectWithValue }) => {
+    try {
+        await deleteTaskFromFirestore(taskId);
+        dispatch(deleteTask(taskId));
+    } catch (error) {
+        const message = getFirestoreErrorMessage(error);
+        dispatch(setTasksError(message));
+        return rejectWithValue(message);
+    }
+});
 
 export default taskSlice.reducer;

@@ -1,34 +1,9 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import TaskForm from '../components/TaskForm';
-import type { TaskStackParamList } from '../navigation/types';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { addTask } from '../store/taskSlice';
 import { COLORS } from '../theme';
-import type { NewTask } from '../types';
 
-type Props = NativeStackScreenProps<TaskStackParamList, 'TaskForm'>;
-
-export default function TaskFormScreen({ navigation }: Props) {
-    const dispatch = useAppDispatch();
-    const user = useAppSelector((state) => state.auth.user);
-
-    const handleSave = async (task: NewTask) => {
-        if (!user) {
-            throw 'La sesión no está disponible.';
-        }
-
-        await dispatch(
-            addTask({
-                task,
-                userId: user.uid,
-            }),
-        ).unwrap();
-
-        navigation.navigate('TaskList');
-    };
-
+export default function TaskFormScreen() {
     return (
         <ScrollView
             contentContainerStyle={styles.content}
@@ -41,7 +16,7 @@ export default function TaskFormScreen({ navigation }: Props) {
                 </Text>
             </View>
 
-            <TaskForm onAddTask={handleSave} />
+            <TaskForm />
         </ScrollView>
     );
 }

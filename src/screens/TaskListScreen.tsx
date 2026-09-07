@@ -22,7 +22,6 @@ import {
     setTasks,
     setTasksError,
     setTasksLoading,
-    toggleTaskStatus,
     type TaskFilter,
 } from '../store/taskSlice';
 import { COLORS } from '../theme';
@@ -44,13 +43,11 @@ export default function TaskListScreen({ navigation }: Props) {
     );
 
     useEffect(() => {
-        if (!user?.uid) {
-            return;
-        }
+        if (!user?.uid) return;
 
         dispatch(setTasksLoading(true));
 
-        const unsubscribe = subscribeToUserTasks(
+        return subscribeToUserTasks(
             user.uid,
             (tasks) => {
                 dispatch(setTasks(tasks));
@@ -58,15 +55,11 @@ export default function TaskListScreen({ navigation }: Props) {
             },
             (subscriptionError) => {
                 dispatch(
-                    setTasksError(
-                        getFirestoreErrorMessage(subscriptionError),
-                    ),
+                    setTasksError(getFirestoreErrorMessage(subscriptionError)),
                 );
                 dispatch(setTasksLoading(false));
             },
         );
-
-        return unsubscribe;
     }, [dispatch, user?.uid]);
 
     const filteredTasks = items.filter((task: Task) => {
@@ -90,24 +83,7 @@ export default function TaskListScreen({ navigation }: Props) {
         <FlatList
             data={filteredTasks}
             keyExtractor={(item: Task) => item.id}
-            renderItem={({ item }: { item: Task }) => (
-                <TaskItem
-                    task={item}
-                    onPress={() =>
-                        navigation.navigate('TaskDetail', {
-                            taskId: item.id,
-                        })
-                    }
-                    onToggleCompleted={() =>
-                        dispatch(
-                            toggleTaskStatus({
-                                taskId: item.id,
-                                completed: !item.completed,
-                            }),
-                        )
-                    }
-                />
-            )}
+            renderItem={({ item }: { item: Task }) => <TaskItem task={item} />}
             ItemSeparatorComponent={() => <View style={styles.separator} />}
             ListHeaderComponent={
                 <View>
@@ -125,7 +101,6 @@ export default function TaskListScreen({ navigation }: Props) {
                             pressed && styles.addButtonPressed,
                         ]}
                         accessibilityRole="button"
-                        accessibilityLabel="Crear una nueva tarea"
                     >
                         <Text style={styles.addButtonText}>+ Nueva tarea</Text>
                     </Pressable>
@@ -202,9 +177,7 @@ const styles = StyleSheet.create({
         paddingBottom: 40,
         flexGrow: 1,
     },
-    header: {
-        marginBottom: 20,
-    },
+    header: { marginBottom: 20 },
     title: {
         color: COLORS.primary,
         fontSize: 32,
@@ -224,14 +197,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 13,
     },
-    addButtonPressed: {
-        opacity: 0.85,
-    },
-    addButtonText: {
-        color: '#FFFFFF',
-        fontSize: 15,
-        fontWeight: '700',
-    },
+    addButtonPressed: { opacity: 0.85 },
+    addButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
     errorBox: {
         backgroundColor: '#FEF2F2',
         borderColor: '#FECACA',
@@ -240,11 +207,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         padding: 12,
     },
-    errorText: {
-        color: '#B91C1C',
-        fontSize: 13,
-        lineHeight: 18,
-    },
+    errorText: { color: '#B91C1C', fontSize: 13, lineHeight: 18 },
     sectionHeader: {
         alignItems: 'center',
         flexDirection: 'row',
@@ -284,27 +247,18 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.primary,
         borderColor: COLORS.primary,
     },
-    filterButtonPressed: {
-        opacity: 0.75,
-    },
+    filterButtonPressed: { opacity: 0.75 },
     filterText: {
         color: COLORS.textSecondary,
         fontSize: 12,
         fontWeight: '700',
     },
-    filterTextActive: {
-        color: '#FFFFFF',
-    },
-    loadingBox: {
-        alignItems: 'center',
-        paddingVertical: 36,
-    },
+    filterTextActive: { color: '#FFFFFF' },
+    loadingBox: { alignItems: 'center', paddingVertical: 36 },
     loadingText: {
         color: COLORS.textSecondary,
         fontSize: 14,
         marginTop: 10,
     },
-    separator: {
-        height: 12,
-    },
+    separator: { height: 12 },
 });

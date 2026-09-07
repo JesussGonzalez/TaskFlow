@@ -1,24 +1,46 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+import type { TaskStackParamList } from '../navigation/types';
+import { useAppDispatch } from '../store/hooks';
+import { saveTaskStatus } from '../store/taskSlice';
 import { COLORS } from '../theme';
 import type { Task } from '../types';
 
+type Navigation = NativeStackNavigationProp<TaskStackParamList, 'TaskList'>;
+
 type TaskItemProps = {
     task: Task;
-    onPress: () => void;
-    onToggleCompleted: () => void;
 };
 
-export default function TaskItem({ task, onPress, onToggleCompleted }: TaskItemProps) {
+export default function TaskItem({ task }: TaskItemProps) {
+    const navigation = useNavigation<Navigation>();
+    const dispatch = useAppDispatch();
+
     return (
         <View style={styles.card}>
             <Pressable
-                onPress={onPress}
-                style={({ pressed }) => [styles.content, pressed && styles.contentPressed]}
+                onPress={() =>
+                    navigation.navigate('TaskDetail', {
+                        taskId: task.id,
+                    })
+                }
+                style={({ pressed }) => [
+                    styles.content,
+                    pressed && styles.contentPressed,
+                ]}
                 accessibilityRole="button"
                 accessibilityLabel={`Ver detalle de ${task.title}`}
             >
                 <View style={styles.titleRow}>
-                    <Text style={[styles.title, task.completed && styles.completedTitle]} numberOfLines={1}>
+                    <Text
+                        style={[
+                            styles.title,
+                            task.completed && styles.completedTitle,
+                        ]}
+                        numberOfLines={1}
+                    >
                         {task.title}
                     </Text>
                     <Text style={styles.arrow}>›</Text>
@@ -33,16 +55,32 @@ export default function TaskItem({ task, onPress, onToggleCompleted }: TaskItemP
             </Pressable>
 
             <Pressable
-                onPress={onToggleCompleted}
+                onPress={() =>
+                    dispatch(
+                        saveTaskStatus({
+                            taskId: task.id,
+                            completed: !task.completed,
+                        }),
+                    )
+                }
                 style={({ pressed }) => [
                     styles.statusButton,
                     task.completed && styles.statusButtonCompleted,
                     pressed && styles.statusButtonPressed,
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel={task.completed ? `Marcar ${task.title} como pendiente` : `Marcar ${task.title} como completada`}
+                accessibilityLabel={
+                    task.completed
+                        ? `Marcar ${task.title} como pendiente`
+                        : `Marcar ${task.title} como completada`
+                }
             >
-                <Text style={[styles.statusText, task.completed && styles.statusTextCompleted]}>
+                <Text
+                    style={[
+                        styles.statusText,
+                        task.completed && styles.statusTextCompleted,
+                    ]}
+                >
                     {task.completed ? 'Completada' : 'Marcar como hecha'}
                 </Text>
             </Pressable>

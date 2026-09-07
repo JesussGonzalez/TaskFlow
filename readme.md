@@ -1,26 +1,68 @@
-# TaskFlow - Clase 7
+# TaskFlow
 
-TaskFlow es una aplicación móvil desarrollada con React Native, Expo y TypeScript.
-
-En esta entrega se incorporó Firebase Authentication y Cloud Firestore para trabajar con usuarios reales y guardar las tareas en la nube.
+TaskFlow es una aplicación móvil desarrollada con React Native, Expo y TypeScript para organizar tareas personales por usuario.
 
 ## Funcionalidades
 
-- Registro de usuarios con correo y contraseña.
-- Inicio y cierre de sesión con Firebase Authentication.
-- Persistencia de sesión mediante AsyncStorage.
-- Navegación protegida según el estado de autenticación.
-- Tareas almacenadas en la colección `tasks` de Firestore.
-- Cada tarea guarda el `userId` del usuario autenticado.
-- Lectura en tiempo real de las tareas del usuario.
-- Creación, cambio de estado y eliminación sincronizados con Firestore.
-- Redux continúa manejando el estado utilizado por la interfaz.
-- Mensajes de error para autenticación y problemas de conexión.
-- Reglas de Firestore para separar los datos entre usuarios.
+- Registro e inicio de sesión con Firebase Authentication.
+- Sesión persistente con `onAuthStateChanged`.
+- Rutas públicas y privadas con React Navigation.
+- Bottom Tabs para Tareas y Perfil.
+- Native Stack para lista, formulario y detalle.
+- Tareas guardadas en Firestore y separadas por `userId`.
+- Sincronización en tiempo real con Firestore.
+- Filtros globales: Todas, Pendientes y Completadas.
+- Estado global con Redux Toolkit.
+- Selección de avatar desde la galería con `expo-image-picker`.
+- Avatar guardado localmente por usuario con AsyncStorage.
+- Cierre de sesión seguro.
+- Estados de carga y mensajes de error.
+
+## Redux Toolkit
+
+El store principal está en:
+
+```text
+src/store/store.ts
+```
+
+La aplicación se encuentra envuelta con `Provider` desde `App.tsx`.
+
+El slice de tareas utiliza `createSlice` e incluye los reducers:
+
+```text
+addTask
+toggleTaskStatus
+deleteTask
+setFilter
+```
+
+La comunicación con Firestore se realiza con acciones asíncronas y el listener en tiempo real mantiene Redux sincronizado con la base de datos.
+
+Los componentes de tareas utilizan el store directamente mediante `useAppSelector` y `useAppDispatch`.
+
+## Estructura principal
+
+```text
+src/
+├── components/
+├── firebase/
+├── navigation/
+├── screens/
+├── services/
+├── store/
+│   ├── authSlice.ts
+│   ├── hooks.ts
+│   ├── profileSlice.ts
+│   ├── store.ts
+│   └── taskSlice.ts
+├── theme/
+└── types/
+```
 
 ## Configuración de Firebase
 
-El proyecto utiliza variables de entorno. Se debe crear un archivo `.env` tomando como referencia `.env.example`.
+Crear un archivo `.env` en la raíz del proyecto utilizando `.env.example` como referencia:
 
 ```env
 EXPO_PUBLIC_FIREBASE_API_KEY=
@@ -31,16 +73,13 @@ EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 EXPO_PUBLIC_FIREBASE_APP_ID=
 ```
 
-Los valores se obtienen al registrar una aplicación Web dentro del proyecto de Firebase.
+En Firebase deben estar habilitados:
 
-En Firebase Authentication debe estar habilitado el proveedor **Correo electrónico/Contraseña**.
+- Authentication con Email/Password.
+- Cloud Firestore.
+- Las reglas incluidas en `firestore.rules`.
 
-También se debe crear una base de datos de Cloud Firestore y publicar las reglas incluidas en `firestore.rules`.
-
-## Dependencias agregadas
-
-- `firebase`
-- `@react-native-async-storage/async-storage`
+El archivo `.env` no se sube al repositorio.
 
 ## Ejecutar el proyecto
 
@@ -49,21 +88,29 @@ npm install
 npx expo start
 ```
 
-## Comprobación de los flujos
+## Verificación funcional
 
-### Registro e inicio de sesión
+El flujo de autenticación y persistencia se comprobó con registro, inicio de sesión, cierre de sesión y recuperación de sesión.
 
-1. Crear una cuenta nueva desde la pantalla de registro.
-2. Verificar que Firebase Authentication muestre el usuario creado.
-3. Cerrar la aplicación y volver a abrirla para comprobar que la sesión continúa activa.
-4. Cerrar sesión desde Perfil.
-5. Intentar ingresar con una contraseña incorrecta y comprobar que se muestre el mensaje de error.
+Para las tareas se verificó creación, lectura, cambio de estado y eliminación en Firestore, además de la separación de datos entre usuarios.
 
-### Guardado de tareas
+La prueba completa de la versión final incluye:
 
-1. Iniciar sesión y crear una tarea.
-2. Verificar que aparezca un documento nuevo en la colección `tasks` de Firestore.
-3. Confirmar que el documento tenga el campo `userId`.
-4. Marcar la tarea como completada y comprobar el cambio en Firestore.
-5. Eliminar la tarea y verificar que también se elimine de Firestore.
-6. Crear una segunda cuenta y comprobar que no pueda ver las tareas de la primera.
+1. Registrarse o iniciar sesión.
+2. Crear una tarea.
+3. Cambiar su estado.
+4. Filtrar tareas.
+5. Abrir el detalle.
+6. Cambiar a la pestaña Perfil.
+7. Elegir una imagen de la galería.
+8. Cancelar el selector y comprobar que la app continúa funcionando.
+9. Cerrar sesión y volver a ingresar.
+10. Confirmar que las tareas continúan sincronizadas.
+
+## Build Android
+
+El proyecto incluye `eas.json` con un perfil `preview` para generar un APK:
+
+```bash
+npx eas-cli@latest build -p android --profile preview
+```
