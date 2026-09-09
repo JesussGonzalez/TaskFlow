@@ -46,6 +46,18 @@ const taskSlice = createSlice({
                 task.completed = !task.completed;
             }
         },
+        setTaskStatus(
+            state,
+            action: PayloadAction<{ taskId: string; completed: boolean }>,
+        ) {
+            const task = state.items.find(
+                (item) => item.id === action.payload.taskId,
+            );
+
+            if (task) {
+                task.completed = action.payload.completed;
+            }
+        },
         deleteTask(state, action: PayloadAction<string>) {
             state.items = state.items.filter((item) => item.id !== action.payload);
         },
@@ -74,6 +86,7 @@ const taskSlice = createSlice({
 export const {
     addTask,
     toggleTaskStatus,
+    setTaskStatus,
     deleteTask,
     setFilter,
     setTasks,
@@ -114,7 +127,7 @@ export const saveTaskStatus = createAsyncThunk<
     async ({ taskId, completed }, { dispatch, rejectWithValue }) => {
         try {
             await updateTaskStatusInFirestore(taskId, completed);
-            dispatch(toggleTaskStatus(taskId));
+            dispatch(setTaskStatus({ taskId, completed }));
         } catch (error) {
             const message = getFirestoreErrorMessage(error);
             dispatch(setTasksError(message));
