@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="TaskFlow - Entrega final de aplicación móvil desarrollada con React Native, Expo, Firebase y Redux Toolkit." />
+  <title>TaskFlow | Entrega final</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --text: #162033;
+      --muted: #667085;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --border: #e4e7ec;
+      --shadow: 0 18px 50px rgba(16, 24, 40, .10);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #eef4ff 0, var(--bg) 420px);
+      color: var(--text);
+    }
+
+    a { color: inherit; }
+    .container { width: min(1100px, calc(100% - 36px)); margin: 0 auto; }
+
+    header {
+      padding: 72px 0 48px;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      padding: 7px 12px;
+      border: 1px solid #bfd0ff;
+      border-radius: 999px;
+      background: #fff;
+      color: #3157a6;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 18px 0 12px;
+      font-size: clamp(42px, 7vw, 70px);
+      letter-spacing: -2.5px;
+      line-height: .98;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.65;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 28px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 20px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 750;
+      border: 1px solid transparent;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+
+    .button:hover { transform: translateY(-1px); }
+    .button.primary { background: var(--primary); color: #fff; box-shadow: 0 10px 22px rgba(37, 99, 235, .25); }
+    .button.primary:hover { background: var(--primary-dark); }
+    .button.secondary { background: #fff; border-color: var(--border); }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 0 auto 48px;
+    }
+
+    .summary div {
+      background: rgba(255,255,255,.85);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .summary strong { display: block; font-size: 17px; }
+    .summary span { display: block; color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+    section { padding: 26px 0 58px; }
+    h2 { margin: 0 0 10px; font-size: 30px; letter-spacing: -.7px; }
+    .section-copy { margin: 0 0 24px; color: var(--muted); line-height: 1.65; }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 8px 24px rgba(16,24,40,.05);
+    }
+
+    .card h3 { margin: 0 0 8px; font-size: 18px; }
+    .card p { margin: 0; color: var(--muted); line-height: 1.55; }
+
+    .screenshots {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    figure {
+      margin: 0;
+      padding: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    figure img {
+      width: 100%;
+      display: block;
+      border-radius: 13px;
+      aspect-ratio: 9 / 19.5;
+      object-fit: cover;
+      object-position: top;
+      background: #eef1f6;
+    }
+
+    figcaption { padding: 10px 4px 2px; text-align: center; color: var(--muted); font-size: 14px; font-weight: 650; }
+
+    .delivery {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .delivery p { margin: 6px 0 0; color: var(--muted); line-height: 1.6; }
+    footer { padding: 28px 0 42px; text-align: center; color: var(--muted); font-size: 14px; }
+
+    @media (max-width: 850px) {
+      .summary { grid-template-columns: repeat(2, 1fr); }
+      .features { grid-template-columns: 1fr; }
+      .screenshots { grid-template-columns: repeat(2, 1fr); }
+      .delivery { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media (max-width: 520px) {
+      header { padding-top: 52px; }
+      .screenshots { grid-template-columns: 1fr 1fr; gap: 9px; }
+      figure { padding: 6px; border-radius: 14px; }
+      figure img { border-radius: 9px; }
+      .actions { flex-direction: column; }
+      .button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="container">
+    <span class="badge">Entrega final · React Native + Expo</span>
+    <h1>TaskFlow</h1>
+    <p class="lead">Aplicación móvil para organizar tareas personales con autenticación, sincronización en tiempo real, estado global y perfil de usuario.</p>
+    <div class="actions">
+      <a class="button primary" href="https://expo.dev/accounts/jesussgonzalez/projects/TaskFlow/builds/33fbeb34-a9db-49f5-a86b-352c9d3a47d7" target="_blank" rel="noopener noreferrer">Ver build Android</a>
+      <a class="button secondary" href="https://github.com/JesussGonzalez/TaskFlow" target="_blank" rel="noopener noreferrer">Ver repositorio</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="summary" aria-label="Tecnologías principales">
+      <div><strong>React Native</strong><span>Aplicación móvil</span></div>
+      <div><strong>Expo SDK 54</strong><span>Build con EAS</span></div>
+      <div><strong>Firebase</strong><span>Auth + Firestore</span></div>
+      <div><strong>Redux Toolkit</strong><span>Estado global</span></div>
+    </div>
+
+    <section>
+      <h2>Funcionalidades</h2>
+      <p class="section-copy">La versión final integra el flujo completo de autenticación, gestión de tareas y perfil.</p>
+      <div class="features">
+        <article class="card"><h3>Autenticación</h3><p>Registro, inicio de sesión, persistencia de sesión y cierre seguro con Firebase Authentication.</p></article>
+        <article class="card"><h3>Tareas sincronizadas</h3><p>Creación, detalle, cambio de estado, filtros y sincronización en tiempo real mediante Cloud Firestore.</p></article>
+        <article class="card"><h3>Perfil</h3><p>Selección de imagen desde la galería con expo-image-picker y persistencia local por usuario.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Capturas de la aplicación</h2>
+      <p class="section-copy">Evidencia visual de la build Android generada con EAS.</p>
+      <div class="screenshots">
+        <figure><img src="https://raw.githubusercontent.com/JesussGonzalez/TaskFlow/main/docs/screenshots/login.jpeg" alt="Pantalla de inicio de sesión de TaskFlow" loading="lazy"><figcaption>Inicio de sesión</figcaption></figure>
+        <figure><img src="https://raw.githubusercontent.com/JesussGonzalez/TaskFlow/main/docs/screenshots/tareas.jpeg" alt="Listado de tareas de TaskFlow" loading="lazy"><figcaption>Listado de tareas</figcaption></figure>
+        <figure><img src="https://raw.githubusercontent.com/JesussGonzalez/TaskFlow/main/docs/screenshots/filtros.jpeg" alt="Filtros de tareas de TaskFlow" loading="lazy"><figcaption>Filtros</figcaption></figure>
+        <figure><img src="https://raw.githubusercontent.com/JesussGonzalez/TaskFlow/main/docs/screenshots/perfil.jpeg" alt="Perfil de usuario de TaskFlow" loading="lazy"><figcaption>Perfil</figcaption></figure>
+      </div>
+    </section>
+
+    <section>
+      <div class="delivery">
+        <div>
+          <h2>Build Android disponible</h2>
+          <p>APK generado con EAS Build usando el perfil Preview. Versión 1.0.0.</p>
+        </div>
+        <div class="actions" style="margin-top:0">
+          <a class="button primary" href="https://expo.dev/artifacts/eas/hsVUd8lp3qEJBCWNU2RVqB9k1LE7LrJzpDKJTocVmZY.apk">Descargar APK</a>
+          <a class="button secondary" href="https://github.com/JesussGonzalez/TaskFlow" target="_blank" rel="noopener noreferrer">Código fuente</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container">TaskFlow · Entrega final</footer>
+</body>
+</html>
