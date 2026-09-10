@@ -125,3 +125,21 @@ Build generada con EAS Build:
 [Ver build en Expo](https://expo.dev/accounts/jesussgonzalez/projects/TaskFlow/builds/33fbeb34-a9db-49f5-a86b-352c9d3a47d7)
 
 [Descargar APK](https://expo.dev/artifacts/eas/hsVUd8lp3qEJBCWNU2RVqB9k1LE7LrJzpDKJTocVmZY.apk)
+
+## Capturas de la aplicación
+
+### Inicio de sesión
+
+<img src="docs/screenshots/login.jpeg" width="280" alt="Pantalla de inicio de sesión de TaskFlow">
+
+### Gestión de tareas
+
+<img src="docs/screenshots/tareas.jpeg" width="280" alt="Listado de tareas de TaskFlow">
+
+### Filtros de tareas
+
+<img src="docs/screenshots/filtros.jpeg" width="280" alt="Filtros de tareas de TaskFlow">
+
+### Perfil
+
+<img src="docs/screenshots/perfil.jpeg" width="280" alt="Perfil de usuario de TaskFlow">
