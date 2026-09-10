@@ -114,3 +114,14 @@ El proyecto incluye `eas.json` con un perfil `preview` para generar un APK:
 ```bash
 npx eas-cli@latest build -p android --profile preview
 ```
+
+Build generada con EAS Build:
+
+- Plataforma: Android
+- Perfil: Preview
+- Formato: APK
+- Versión: 1.0.0
+
+[Ver build en Expo](https://expo.dev/accounts/jesussgonzalez/projects/TaskFlow/builds/33fbeb34-a9db-49f5-a86b-352c9d3a47d7)
+
+[Descargar APK](https://expo.dev/artifacts/eas/hsVUd8lp3qEJBCWNU2RVqB9k1LE7LrJzpDKJTocVmZY.apk)
