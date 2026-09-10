@@ -37,6 +37,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "34ebcfe3-6d86-4dfd-b502-41a4b670982d"
+      }
+    },
+    "owner": "jesussgonzalez"
   }
 }
